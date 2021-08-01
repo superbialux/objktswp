@@ -43,6 +43,9 @@ export const swap = async (pieces, ownerAddress) => {
     let batch = await Tezos.wallet.batch(list);
     return await batch.send()
   } else {
-    throw ''
+    throw Object.assign(
+      new Error('Could not open wallet'),
+      { code: 402 }
+   );
   }
 }
