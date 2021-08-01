@@ -96,6 +96,10 @@ const App = () => {
           setLoading(false)
           setCollection(false)
         }
+      } else {
+        setLoading(false)
+        setCollection([])
+        setToSwap({})
       }
     })()
   }, [account])

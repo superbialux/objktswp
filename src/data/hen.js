@@ -6,8 +6,7 @@ const wallet = new BeaconWallet({ name: "OBJKTs Batch Swap" });
 
 Tezos.setWalletProvider(wallet);
 export const swap = async (pieces, ownerAddress) => {
-  if (pieces && pieces.length && ownerAddress) {
-
+  if (pieces && ownerAddress) {
     const v2Contract = 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn'
     const objktsContract = 'KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton'
 
