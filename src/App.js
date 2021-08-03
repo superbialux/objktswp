@@ -1,20 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react'
-import './App.css';
-import { TezosToolkit} from "@taquito/taquito";
-import { BeaconWallet } from "@taquito/beacon-wallet";
-import {
-  NetworkType,
-} from "@airgap/beacon-sdk";
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { fetchPieces, getObjktInfo } from './data/api'
 import { getIpfsUrl } from './utils/ipfs';
 import { toTezValue } from './utils/numbers';
-import { swap } from './data/hen';
-
-const Tezos = new TezosToolkit("https://mainnet-tezos.giganode.io");
-const wallet = new BeaconWallet({ name: "OBJKTs Batch Swap" });
-
-Tezos.setWalletProvider(wallet);
-const network = { type: NetworkType.MAINNET };
+import { walletPreview } from './utils/string';
+import { swap, connect, disconnect, getAccount } from './data/hen';
 
 const App = () => {
   const [loading, setLoading] = useState(true)
@@ -26,46 +15,47 @@ const App = () => {
   useEffect(() => {
     (async () => {
       try {
-        const activeAccount = await wallet.client.getActiveAccount()
+        const activeAccount = await getAccount()
         if (activeAccount) {
           setAccount(activeAccount.address)
         }
         setLoading(false)
       } catch (err) {
-        console.log(err)
         setLoading(false)
       }
     })()
   }, [])
 
-
-  const connect = async () => {
-    try {
-      console.log("Requesting permissions...")
-      const permissions = await wallet.client.requestPermissions({
-        network: network,
-      })
-      const address = await wallet.getPKH();
-      setAccount(address)
-      setLoading(false)
-      console.log("Got permissions:", permissions.address)
-    } catch (error) {
-      console.log("Got error:", error)
-    }
-  }
-
-  const disconnect = async () => {
-    try {
-      await wallet.clearActiveAccount();
-      setAccount(false)
-    } catch (err) {
-      console.log('Got error:', err)
-    }
-  }
-
   const fetchObjktPrice = async (id) => {
     return await getObjktInfo(id)
   }
+
+  const batchSwap = useCallback(() => {
+    swap(toSwap, account).then(() => {
+      setToSwap({})
+    }).catch(() => {
+      setError('could not open wallet')
+    })
+  }, [toSwap, account])
+
+  const connectWallet = useCallback(() => {
+    connect().then((account) => {
+      setAccount(account)
+      setLoading(false)
+    }).catch(() => {
+      setError('Could not fetch wallet')
+      setLoading(false)
+    })
+  }, [])
+
+
+  const disconnectWallet = useCallback(() => {
+    disconnect().then(() => {
+      setAccount(false)
+    }).catch(() => {
+      setError('Could not disconnect wallet')
+    })
+  }, [])
 
   useEffect(() => {
     (async () => {
@@ -85,8 +75,10 @@ const App = () => {
               result.push({
                 ...objkt,
                 meta: objktInfo,
+                bidder: { link: `https://www.hicetnunc.xyz/tz/${lowestPricedObjkt.creator.address}`, name: lowestPricedObjkt.creator.name || walletPreview(lowestPricedObjkt.creator.address) },
                 minPrice: toTezValue(lowestPricedObjkt.price),
-                price: toTezValue(objkt.price)
+                price: toTezValue(objkt.price),
+                initialPrice: toTezValue(objkt.price)
               })
             }
           }
@@ -110,6 +102,8 @@ const App = () => {
       const objkt = collection.find(o => o.token.id === toSwap[i].token.id)
       if (toSwap[i].price !== String(objkt.price)) {
         count++
+      } else {
+        delete toSwap[i];
       }
     }
     return count
@@ -117,10 +111,6 @@ const App = () => {
 
   useEffect(() => {
     let errorTimer = setTimeout(() => setError(false), 5000);
-
-    // this will clear Timeout
-    // when component unmount like in willComponentUnmount
-    // and show will not change to true
     return () => {
       clearTimeout(errorTimer);
     };
@@ -128,21 +118,21 @@ const App = () => {
 
 
   return (
-    <div className="App">
+    <main>
       <section className="w-full flex flex-col items-center pt-6 pb-16">
         <div className="container">
           <div className="flex flex-row justify-between py-2 items-center border-b-4 border-gray-300">
             <div className="flex flex-row items-center w-3/6">
-              <p className="text-left font-medium">OBJKT</p>
+              <p className="text-base text-left font-medium">OBJKT</p>
             </div>
             <div className="w-1/6">
-              <p className="text-left font-medium">min price</p>
+              <p className="text-base text-left font-medium">min price</p>
             </div>
             <div className="w-1/6">
-              <p className="text-left font-medium">your price</p>
+              <p className="text-base text-left font-medium">your price</p>
             </div>
             <div className="w-1/6">
-              <p className="text-left font-medium">new price</p>
+              <p className="text-base text-left font-medium">new price</p>
             </div>
           </div>
         </div>
@@ -150,23 +140,27 @@ const App = () => {
           {
             collection && collection.length ?
               collection.map((piece, idx) => (
-                <div key={idx} className="flex flex-row justify-between py-2 items-center border-b border-gray-200">
+                <div key={idx} className={`flex flex-row justify-between py-2 items-center border-b border-gray-200 ${toSwap[piece.token.id] ? 'bg-gray-100' : 'bg-white'}`}>
                   <div className="flex flex-row items-center w-3/6">
                     <img className="h-6 w-6 mr-3" src={getIpfsUrl(piece.token.display_uri)} alt={piece.token.id} />
                     <div className="flex flex-col items-start">
-                      <a className="text-blue underline text-blue-500" href={`https://www.hicetnunc.xyz/objkt/${piece.token.id}`}>{piece.token.title}</a>
-                      <p>OBJKT #{piece.token.id}</p>
+                      <a tabIndex="-1" className="text-base underline text-blue-500" href={`https://www.hicetnunc.xyz/objkt/${piece.token.id}`}>{piece.token.title}</a>
+                      <p className="text-base text-black">OBJKT #{piece.token.id}</p>
                     </div>
                   </div>
                   <div className="w-1/6">
-                    <p className="text-left">{piece.minPrice} tez</p>
+                    <div className="flex flex-col items-start">
+                      <p className="text-base text-left">{piece.minPrice} tez</p>
+                      <a tabIndex="-1" className="text-xs text-blue underline text-blue-500" href={piece.bidder.link}>{piece.bidder.name}</a>
+                    </div>
                   </div>
                   <div className="w-1/6">
-                    <p className={`text-left ${parseFloat(piece.price) > parseFloat(piece.minPrice) ? 'text-red-500' : null}`}>{piece.price} tez</p>
+                    <p className={`text-base text-left ${parseFloat(piece.price) > parseFloat(piece.minPrice) ? 'text-red-500' : null}`}>{piece.price} tez</p>
                   </div>
                   <div className="w-1/6 flex flex-row items-center">
                     <input
-                      className="border p-1 border-gray-300 w-full w-2/3"
+                      onWheel={(e) => e.target.blur()}
+                      className="border p-1 border-gray-300 w-2/3"
                       value={toSwap[piece.token.id]?.price === undefined ? piece.price : toSwap[piece.token.id]?.price}
                       placeholder="price per OBJKT"
                       type="number"
@@ -180,7 +174,7 @@ const App = () => {
                         })
                       }}
                     />
-                    <span className="w-1/3">tez</span>
+                    <span className="w-1/3 text-center text-base">tez</span>
                   </div>
                 </div>
               )) : null
@@ -189,37 +183,31 @@ const App = () => {
       </section>
       <footer className="fixed bottom-0 bg-gray-900 w-full flex flex-row justify-center">
         <div className="container flex flex-row justify-between py-3">
-          <div>
+          <div className="flex-1 flex flex-row justify-start">
             {loading
-              ? <p className="text-white">loading...</p>
+              ? <p className="text-base text-white">loading...</p>
               : account
-                ? <button className="bg-transparent text-white border-none underline" onClick={disconnect}>disconnect</button>
-                : <button className="bg-transparent text-white border-none underline" onClick={connect}>connect</button>
+                ? <button className="text-base bg-transparent text-white border-none underline" onClick={disconnectWallet}>disconnect</button>
+                : <button className="text-base bg-transparent text-white border-none underline" onClick={connectWallet}>connect</button>
             }
           </div>
-          
-          {error ? <div className="flex-1">
-            <p className="text-red-500">
+
+          {error ? <div className="flex-1 flex flex-row justify-center">
+            <p className="text-base text-red-500">
               Error: {error}
             </p>
-          </div> : null }
-          <div>
+          </div> : null}
+          <div className="flex-1 flex flex-row justify-end">
             {loading
               ? null
               : account
-                ? <button className="bg-transparent text-white border-none underline" onClick={async () => {
-                  try {
-                    await swap(toSwap, account)
-                  } catch {
-                    setError('could not open wallet')
-                  }
-                }}>reswap {getNewObjkts} objkts</button>
+                ? <button className="text-base bg-transparent text-white border-none underline" onClick={batchSwap}>reswap {getNewObjkts} OBJKT{getNewObjkts === 1 ? '' : 's'}</button>
                 : null
             }
           </div>
         </div>
       </footer>
-    </div >
+    </main>
   );
 }
 

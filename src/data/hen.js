@@ -1,12 +1,49 @@
 import { TezosToolkit, OpKind } from "@taquito/taquito";
 import { BeaconWallet } from "@taquito/beacon-wallet";
+import {
+  NetworkType,
+} from "@airgap/beacon-sdk";
 
 const Tezos = new TezosToolkit("https://mainnet-tezos.giganode.io");
 const wallet = new BeaconWallet({ name: "OBJKTs Batch Swap" });
 
 Tezos.setWalletProvider(wallet);
+const network = { type: NetworkType.MAINNET };
+
+export const getAccount = async () => {
+  try {
+    return await wallet.client.getActiveAccount()
+  } catch (err) {
+    throw err
+  }
+}
+
+
+export const connect = async () => {
+  try {
+    await wallet.client.requestPermissions({
+      network: network,
+    })
+    const address = await wallet.getPKH();
+    return address
+
+  } catch (err) {
+    throw err
+  }
+}
+
+export const disconnect = async () => {
+  try {
+    await wallet.clearActiveAccount();
+    return 'disconnected'
+  } catch (err) {
+    throw err
+  }
+}
+
+
 export const swap = async (pieces, ownerAddress) => {
-  if (pieces && ownerAddress) {
+  try {
     const v2Contract = 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn'
     const objktsContract = 'KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton'
 
@@ -16,8 +53,7 @@ export const swap = async (pieces, ownerAddress) => {
     let list = []
     for (let i in pieces) {
       const objkt = pieces[i]
-      const price = objkt.price ? objkt.price : 0
-      console.log(price)
+      const price = objkt.price ? objkt.price : objkt.initialPrice
       const { id: swapId } = objkt.meta.swaps.find(s => s.creator.address === ownerAddress && s.status === 0)
       list.push({
         kind: OpKind.TRANSACTION,
@@ -41,10 +77,7 @@ export const swap = async (pieces, ownerAddress) => {
 
     let batch = await Tezos.wallet.batch(list);
     return await batch.send()
-  } else {
-    throw Object.assign(
-      new Error('Could not open wallet'),
-      { code: 402 }
-   );
+  } catch (err) {
+    throw err
   }
 }
