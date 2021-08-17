@@ -271,6 +271,7 @@ const App = () => {
               }
             </div>
           </section>
+          {console.log(fee)}
           <footer className="fixed bottom-0 bg-gray-900 w-full flex flex-row justify-center">
             <div className="container flex flex-row justify-between py-3">
               <div className="flex-1 flex flex-row justify-start">
@@ -288,7 +289,7 @@ const App = () => {
 
               <div className="flex-1 flex flex-row justify-end">
                 {account
-                  ? <button disabled={!getNewObjkts} className="text-base bg-transparent text-white border-none underline" onClick={batchSwap}>swap {getNewObjkts} OBJKT{getNewObjkts === 1 ? '' : 's'}</button>
+                  ? <button disabled={!getNewObjkts || parseFloat(fee) === 0} className="text-base bg-transparent text-white border-none underline" onClick={batchSwap}>swap {getNewObjkts} OBJKT{getNewObjkts === 1 ? '' : 's'}</button>
                   : null
                 }
               </div>
