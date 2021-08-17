@@ -184,13 +184,13 @@ const App = () => {
                   <p className="text-base text-left font-medium">OBJKT</p>
                 </div>
                 <div className="w-1/6">
-                  <p className="text-base text-left font-medium">min price</p>
+                  <p className="text-base text-left font-medium">Min. Price</p>
                 </div>
                 <div className="w-1/6">
-                  <p className="text-base text-left font-medium">your price</p>
+                  <p className="text-base text-left font-medium">Your Price</p>
                 </div>
                 <div className="w-1/6">
-                  <p className="text-base text-left font-medium">new price</p>
+                  <p className="text-base text-left font-medium">New Price</p>
                 </div>
               </div>
             </div>
@@ -278,8 +278,8 @@ const App = () => {
             <div className="container flex flex-row justify-between py-3">
               <div className="flex-1 flex flex-row justify-start">
                 {account
-                  ? <button className="text-base bg-transparent text-white border-none underline" onClick={disconnectWallet}>disconnect</button>
-                  : <button className="text-base bg-transparent text-white border-none underline" onClick={connectWallet}>connect</button>
+                  ? <button className="text-base bg-transparent text-white border-none underline" onClick={disconnectWallet}>Disconnect</button>
+                  : <button className="text-base bg-transparent text-white border-none underline" onClick={connectWallet}>Connect</button>
                 }
               </div>
 
@@ -291,7 +291,7 @@ const App = () => {
 
               <div className="flex-1 flex flex-row justify-end">
                 {account
-                  ? <button disabled={!getNewObjkts || parseFloat(fee) === 0} className="text-base bg-transparent text-white border-none underline" onClick={batchSwap}>swap {getNewObjkts} OBJKT{getNewObjkts === 1 ? '' : 's'}</button>
+                  ? <button disabled={!getNewObjkts || parseFloat(fee) === 0} className="text-base bg-transparent text-white border-none underline" onClick={batchSwap}>Swap {getNewObjkts} OBJKT{getNewObjkts === 1 ? '' : 's'}</button>
                   : null
                 }
               </div>
