@@ -269,9 +269,9 @@ const App = () => {
                     </div>
                   )) : null
               }
-              <div className="w-full py-12 flex flex-row justify-center">
+              {account ? null : <div className="w-full py-12 flex flex-row justify-center">
                 <button className="text-base bg-transparent text-gray-900 border-none underline" onClick={connectWallet}>Connect your wallet to start</button>
-              </div>
+              </div>}
             </div>
           </section>
           <footer className="fixed bottom-0 bg-gray-900 w-full flex flex-row justify-center">
