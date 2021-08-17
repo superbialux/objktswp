@@ -53,6 +53,7 @@ export const swap = async (pieces, ownerAddress, fee) => {
     for (let i in pieces) {
       const objkt = pieces[i]
       const price = objkt.price ? objkt.price : objkt.initialPrice
+
       const currentSwap = objkt.meta.swaps?.find(s => s.creator.address === ownerAddress && s.status === 0)
 
       if (currentSwap) {

@@ -103,7 +103,7 @@ const App = () => {
                 bidder: lowestPricedObjkt ? { link: `https://www.hicetnunc.xyz/tz/${lowestPricedObjkt.creator.address}`, name: lowestPricedObjkt.creator.name || walletPreview(lowestPricedObjkt.creator.address) } : false,
                 minPrice: toTezValue(lowestPricedObjkt.price),
                 price: toTezValue(objkt.price),
-                initialPrice: toTezValue(objkt.price)
+                initialPrice: toTezValue(objkt.price || objkt.minPrice)
               })
             }
           }
@@ -148,6 +148,15 @@ const App = () => {
     };
   }, [error])
 
+  const getNewValue = useCallback((piece) => {
+    if (toSwap[piece.token.id]?.price === undefined) {
+      if (piece.price) {
+        return piece.price
+      }
+      return ''
+    }
+    return toSwap[piece.token.id]?.price
+  }, [toSwap])
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -215,7 +224,7 @@ const App = () => {
                     onWheel={(e) => e.target.blur()}
                     className="border p-1 border-gray-300 w-2/3"
                     value={fee}
-                    placeholder="price"
+                    placeholder="fee"
                     type="number"
                     onChange={(e) => setFee(e.target.value)}
                   />
@@ -251,7 +260,7 @@ const App = () => {
                         <input
                           onWheel={(e) => e.target.blur()}
                           className="border p-1 border-gray-300 w-2/3"
-                          value={(toSwap[piece.token.id]?.price === undefined ? piece.price : toSwap[piece.token.id]?.price)}
+                          value={getNewValue(piece)}
                           placeholder="price"
                           type="number"
                           onChange={(e) => {
@@ -259,7 +268,7 @@ const App = () => {
                               ...toSwap,
                               [piece.token.id]: {
                                 ...piece,
-                                price: e.target.value
+                                price:e.target.value
                               }
                             })
                           }}
