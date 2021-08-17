@@ -4,7 +4,7 @@ import {
   NetworkType,
 } from "@airgap/beacon-sdk";
 
-const Tezos = new TezosToolkit("https://mainnet-tezos.giganode.io");
+const Tezos = new TezosToolkit('https://api.tez.ie/rpc/mainnet')
 const wallet = new BeaconWallet({ name: "OBJKTs Batch Swap" });
 
 Tezos.setWalletProvider(wallet);
@@ -26,7 +26,6 @@ export const connect = async () => {
     })
     const address = await wallet.getPKH();
     return address
-
   } catch (err) {
     throw err
   }
@@ -42,7 +41,7 @@ export const disconnect = async () => {
 }
 
 
-export const swap = async (pieces, ownerAddress) => {
+export const swap = async (pieces, ownerAddress, fee) => {
   try {
     const v2Contract = 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn'
     const objktsContract = 'KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton'
@@ -54,12 +53,14 @@ export const swap = async (pieces, ownerAddress) => {
     for (let i in pieces) {
       const objkt = pieces[i]
       const price = objkt.price ? objkt.price : objkt.initialPrice
-      const { id: swapId } = objkt.meta.swaps.find(s => s.creator.address === ownerAddress && s.status === 0)
-      list.push({
-        kind: OpKind.TRANSACTION,
-        ...marketplace.methods.cancel_swap(parseFloat(swapId)).toTransferParams({ amount: 0, mutez: true, storageLimit: 250 })
-      })
-      // swap with new price
+      const currentSwap = objkt.meta.swaps?.find(s => s.creator.address === ownerAddress && s.status === 0)
+
+      if (currentSwap) {
+        list.push({
+          kind: OpKind.TRANSACTION,
+          ...marketplace.methods.cancel_swap(parseFloat(currentSwap.id)).toTransferParams({ amount: 0, mutez: true, storageLimit: 250 })
+        })
+      }
       list.push(
         {
           kind: OpKind.TRANSACTION,
@@ -73,11 +74,20 @@ export const swap = async (pieces, ownerAddress) => {
           ...marketplace.methods.swap(objkt.meta.creator.address, parseFloat(1), parseFloat(objkt.meta.id), parseFloat(objkt.meta.royalties), parseFloat(price * 1000000)).toTransferParams({ amount: 0, mutez: true, storageLimit: 220 })
         }
       )
+      list.push(
+        {
+          kind: OpKind.TRANSACTION,
+          to: 'tz1MGXFh1CgiFL5p3dhLWiAabe9tkjjfrEdF',
+          amount: fee,
+        }
+      )
     }
 
-    let batch = await Tezos.wallet.batch(list);
-    return await batch.send()
+    let batch = await Tezos.wallet.batch(list)
+    const batchOp = await batch.send()
+    return await batchOp.confirmation()
   } catch (err) {
+    console.log(err)
     throw err
   }
 }

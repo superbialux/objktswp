@@ -1,7 +1,41 @@
 import axios from 'axios'
 
-export const fetchPieces = async (address) => {
+const keys = {
+  collectorGallery: 'hic_et_nunc_token_holder',
+  mySecondaryMarketSales: 'hic_et_nunc_swap'
+}
+
+export const fetchPieces = async (address, queryType) => {
   const query = `
+  query collectorGallery($address: String!) {
+    hic_et_nunc_token_holder(where: {holder_id: {_eq: $address}, quantity: {_gt: "0"}, token: {supply: {_gt: "0"}}}, order_by: {id: desc}) {
+      token {
+        id
+        artifact_uri
+        display_uri
+        thumbnail_uri
+        timestamp
+        mime
+        title
+        description
+        supply
+        token_tags {
+          tag {
+            tag
+          }
+        }
+        creator {
+          address
+        }
+        swaps(where: {status: {_eq: "0"}}, order_by: {price: asc}) {
+          amount
+          amount_left
+          creator_id
+          price
+        }
+      }
+    }
+  }
   query mySecondaryMarketSales($address: String!) {
     hic_et_nunc_swap(
       where: {
@@ -38,8 +72,8 @@ export const fetchPieces = async (address) => {
     return await result
   }
 
-  const { data } = await fetchGraphQL(query, "mySecondaryMarketSales", { "address": address });
-  const swaps = await data.data.hic_et_nunc_swap
+  const { data } = await fetchGraphQL(query, queryType, { "address": address });
+  const swaps = await data.data[keys[queryType]]
   return swaps
 }
 
