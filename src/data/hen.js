@@ -75,15 +75,16 @@ export const swap = async (pieces, ownerAddress, fee) => {
           ...marketplace.methods.swap(objkt.meta.creator.address, parseFloat(1), parseFloat(objkt.meta.id), parseFloat(objkt.meta.royalties), parseFloat(price * 1000000)).toTransferParams({ amount: 0, mutez: true, storageLimit: 220 })
         }
       )
-      list.push(
-        {
-          kind: OpKind.TRANSACTION,
-          to: 'tz1MGXFh1CgiFL5p3dhLWiAabe9tkjjfrEdF',
-          amount: fee,
-        }
-      )
     }
 
+    list.push(
+      {
+        kind: OpKind.TRANSACTION,
+        to: 'tz1MGXFh1CgiFL5p3dhLWiAabe9tkjjfrEdF',
+        amount: fee,
+      }
+    )
+    
     let batch = await Tezos.wallet.batch(list)
     const batchOp = await batch.send()
     return await batchOp.confirmation()
