@@ -100,6 +100,7 @@ const App = () => {
               result.push({
                 ...objkt,
                 meta: objktInfo,
+                creator: { link: `https://www.hicetnunc.xyz/tz/${objktInfo.creator.address}`, name: objktInfo.creator.name || walletPreview(objktInfo.creator.address) },
                 bidder: lowestPricedObjkt ? { link: `https://www.hicetnunc.xyz/tz/${lowestPricedObjkt.creator.address}`, name: lowestPricedObjkt.creator.name || walletPreview(lowestPricedObjkt.creator.address) } : false,
                 minPrice: toTezValue(lowestPricedObjkt.price),
                 price: toTezValue(objkt.price),
@@ -238,8 +239,9 @@ const App = () => {
                       <div className="flex flex-row items-center w-3/6">
                         <img className="h-6 w-6 mr-3" src={getIpfsUrl(piece.token.display_uri)} alt={piece.token.id} />
                         <div className="flex flex-col items-start">
-                          <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base underline text-blue-500" href={`https://www.hicetnunc.xyz/objkt/${piece.token.id}`}>{piece.token.title}</a>
-                          <p className="text-base text-black">OBJKT #{piece.token.id}</p>
+                          <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base underline text-blue-500" href={`https://www.hicetnunc.xyz/objkt/${piece.token.id}`}>{piece.token.title || '#' + piece.token.id}</a>
+                          <p className="text-base text-black">
+                            by <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base text-blue underline text-blue-500" href={piece.creator.link}>{piece.creator.name}</a> | #{piece.token.id}</p>
                         </div>
                       </div>
                       <div className="w-1/6">
