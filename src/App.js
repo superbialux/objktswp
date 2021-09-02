@@ -5,6 +5,15 @@ import { toTezValue } from './utils/numbers';
 import { walletPreview } from './utils/string';
 import { swap, connect, disconnect, getAccount } from './data/hen';
 import ReactLoading from "react-loading";
+import { AiFillCaretDown } from "react-icons/ai";
+
+const coolKids = [
+  'tz1MGXFh1CgiFL5p3dhLWiAabe9tkjjfrEdF',
+  'tz1Rm5QmNUnQetDKSVW8srM29hjPRiQCgqJx'
+]
+const sortByPrice = (a, b) => {
+  return Number(a.price) - Number(b.price)
+}
 
 const App = () => {
   const [loading, setLoading] = useState(true)
@@ -15,6 +24,16 @@ const App = () => {
   const [swaps, setSwaps] = useState(false)
   const [type, setType] = useState('mySecondaryMarketSales')
   const [fee, setFee] = useState(1)
+  const [isCool, setIsCool] = useState(false)
+  const [listings, setListings] = useState({})
+
+  useEffect(() => {
+    if (account && coolKids.includes(account)) {
+      setFee(0)
+      setIsCool(true)
+    }
+  }, [account])
+
   useEffect(() => {
     (async () => {
       try {
@@ -85,26 +104,37 @@ const App = () => {
           const result = []
           for (let i in swaps) {
             const objkt = swaps[i]
-            if (objkt.status === 0 || !objkt.status) {
-              const objktInfo = objkt.token
-              const currentSwaps = objktInfo.swaps
-              let lowestPricedObjkt = false
-              if (currentSwaps.length) {
-                lowestPricedObjkt = currentSwaps.reduce(function (prev, curr) {
-                  return prev.price < curr.price ? prev : curr;
-                });
-              }
 
-              result.push({
-                ...objkt,
-                meta: objktInfo,
-                creator: { link: `https://www.hicetnunc.xyz/tz/${objktInfo.creator.address}`, name: objktInfo.creator.name || walletPreview(objktInfo.creator.address) },
-                bidder: lowestPricedObjkt ? { link: `https://www.hicetnunc.xyz/tz/${lowestPricedObjkt.creator.address}`, name: lowestPricedObjkt.creator.name || walletPreview(lowestPricedObjkt.creator.address) } : false,
-                minPrice: toTezValue(lowestPricedObjkt.price),
-                price: toTezValue(objkt.price),
-                initialPrice: toTezValue(objkt.price || objkt.minPrice)
-              })
+            const objktInfo = objkt.token
+            const currentSwaps = objktInfo.swaps
+            let lowestPricedObjkt = false
+            if (currentSwaps.length) {
+              lowestPricedObjkt = currentSwaps.reduce(function (prev, curr) {
+                return prev.price < curr.price ? prev : curr;
+              });
             }
+
+            let total = 0
+            total = objktInfo.supply
+            let ed =
+              objktInfo.token_holders.filter(
+                (e) => e.holder_id === 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn'
+              ).length > 0
+                ? objktInfo.token_holders.filter(
+                  (e) => e.holder_id === 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn'
+                )[0].quantity
+                : 'X'
+            result.push({
+              ...objkt,
+              meta: objktInfo,
+              creator: { link: `https://www.hicetnunc.xyz/tz/${objktInfo.creator.address}`, name: objktInfo.creator.name || walletPreview(objktInfo.creator.address) },
+              bidder: lowestPricedObjkt ? { link: `https://www.hicetnunc.xyz/tz/${lowestPricedObjkt.creator.address}`, name: lowestPricedObjkt.creator.name || walletPreview(lowestPricedObjkt.creator.address) } : false,
+              minPrice: toTezValue(lowestPricedObjkt.price),
+              price: toTezValue(objkt.price),
+              initialPrice: toTezValue(objkt.price || objkt.minPrice),
+              editions: `${ed}/${total}`
+            })
+
           }
           setCollection(result)
         } catch (err) {
@@ -203,7 +233,7 @@ const App = () => {
               </div>
             </div>
             <div className="container overflow-hidden">
-              <div className='flex flex-row justify-between py-2 items-center border-b bg-blue-50 border-gray-200 bg-white'>
+              {isCool ? null : <div className='flex flex-row justify-between py-2 items-center border-b bg-blue-50 border-gray-200 bg-white'>
                 <div className="flex flex-row items-center w-3/6">
 
                   <div className="flex flex-col items-start">
@@ -229,34 +259,59 @@ const App = () => {
                   />
                   <span className="w-1/3 text-center text-base">tez</span>
                 </div>
-              </div>
+              </div> }
               {
                 collection && collection.length ?
                   collection.map((piece, idx) => (
-                    <div key={idx} className={`flex flex-row justify-between py-2 items-center border-b border-gray-200 ${toSwap[piece.token.id] ? 'bg-gray-100' : 'bg-white'}`}>
+                    <div key={idx} className={`flex flex-row justify-between py-2 border-b border-gray-200 ${toSwap[piece.token.id] ? 'bg-gray-100' : 'bg-white'}`}>
                       <div className="flex flex-row items-center w-3/6">
                         <img className="h-6 w-6 mr-3" src={getIpfsUrl(piece.token.display_uri)} alt={piece.token.id} />
                         <div className="flex flex-col items-start">
-                          <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base underline text-blue-500" href={`https://www.hicetnunc.xyz/objkt/${piece.token.id}`}>{piece.token.title || '#' + piece.token.id}</a>
-                          <p className="text-base text-black">
-                            by <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base text-blue underline text-blue-500" href={piece.creator.link}>{piece.creator.name}</a> | #{piece.token.id}</p>
+
+                          <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base underline text-blue-500" href={`https://www.hicetnunc.xyz/objkt/${piece.token.id}`}>
+                            {piece.token.title || '#' + piece.token.id}
+                          </a>
+
+                          <div className="flex flex-row items-center">
+                            <p className="text-sm text-black">
+                              by <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base text-blue underline text-blue-500" href={piece.creator.link}>{piece.creator.name}</a>
+                            </p>
+                            <div className="bg-gray-300 w-1 h-1 mx-2" />
+                            <p className="text-sm text-black">Editions: {piece.editions} </p>
+                            <div className="bg-gray-300 w-1 h-1 mx-2" />
+                            <p className="text-sm text-black">#{piece.token.id}</p></div>
                         </div>
                       </div>
                       <div className="w-1/6">
-                        {
-                          piece.minPrice ? <div className="flex flex-col items-start">
-                            <p className="text-base text-left">{piece.minPrice} tez</p>
-                            <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-xs text-blue underline text-blue-500" href={piece.bidder.link}>{piece.bidder.name}</a>
-                          </div> : <p className='text-base text-left'>-</p>}
+                        <div>
+                          {
+                            piece.minPrice || piece.price === 0 ? <div className="flex flex-row items-center">
+                              <p className="text-base text-left">{piece.minPrice} tez</p>
+                              <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-sm text-blue underline text-blue-500 ml-2" href={piece.bidder.link}>{piece.bidder.name}</a>
+                            </div> : <p className='text-base text-left'>-</p>}
+                        </div>
+                        <div>
+                          <button  tabIndex="-1" onClick={() => setListings({...listings, [piece.token.id]: !listings[piece.token.id]})} className="text-sm flex flex-row items-center underline text-gray-900">Show Listings <AiFillCaretDown className="ml-1" /></button>
+                          {listings[piece.token.id] ? <div className="text-xs mt-1">
+                            {piece.meta.swaps.sort(sortByPrice).map((swap, index) => (
+                              <div key={index} >
+                                <div className="items-center">
+                               {swap.amount_left} ed. <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-sm text-blue underline text-blue-500" href={`https://www.hicetnunc.xyz/tz/${swap.creator.address}`}> 
+                                 {swap.creator.name || walletPreview(swap.creator.address)}</a> {toTezValue(swap.price)} tez
+                                </div>
+                              </div>
+                            ))}
+                          </div> : null }
+                        </div>
                       </div>
-                      <div className="w-1/6">
+                      <div className="w-1/6 flex flex-col justify-center">
                         {
-                          piece.price
+                          piece.price || piece.price === 0
                             ? <p className={`text-base text-left ${parseFloat(piece.price) > parseFloat(piece.minPrice) ? 'text-red-500' : null}`}>{piece.price} tez</p>
                             : <p className='text-base text-left'>-</p>
                         }
                       </div>
-                      <div className="w-1/6 flex flex-row items-center">
+                      <div className="w-1/6 flex flex-row items-center justify-center">
                         <input
                           onWheel={(e) => e.target.blur()}
                           className="border p-1 border-gray-300 w-2/3"
@@ -268,7 +323,7 @@ const App = () => {
                               ...toSwap,
                               [piece.token.id]: {
                                 ...piece,
-                                price:e.target.value
+                                price: e.target.value
                               }
                             })
                           }}
@@ -300,7 +355,7 @@ const App = () => {
 
               <div className="flex-1 flex flex-row justify-end">
                 {account
-                  ? <button disabled={!getNewObjkts || parseFloat(fee) === 0} className="text-base bg-transparent text-white border-none underline" onClick={batchSwap}>Swap {getNewObjkts} OBJKT{getNewObjkts === 1 ? '' : 's'}</button>
+                  ? <button disabled={!getNewObjkts || (parseFloat(fee) === 0 && !isCool) } className="text-base bg-transparent text-white border-none underline" onClick={batchSwap}>Swap {getNewObjkts} OBJKT{getNewObjkts === 1 ? '' : 's'}</button>
                   : null
                 }
               </div>

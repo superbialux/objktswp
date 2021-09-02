@@ -10,15 +10,24 @@ export const fetchPieces = async (address, queryType) => {
   query fetchGallery($address: String!) {
     hic_et_nunc_token_holder(where: {holder_id: {_eq: $address}, quantity: {_gt: "0"}, token: {supply: {_gt: "0"}}}, order_by: {id: desc}) {
       token {
+        supply
         title
         royalties
         id
         display_uri
+        token_holders(where: {quantity: {_gt: "0"}}) {
+          holder_id
+          quantity
+          holder {
+            name
+          }
+        }
         creator {
           address
           name
         }
         swaps(where: {status: {_eq: "0"}}, order_by: {price: asc}) {
+          amount_left
           price
           status
           id
@@ -40,15 +49,24 @@ export const fetchPieces = async (address, queryType) => {
       price
       status
       token {
+        supply
         title
         royalties
         id
         display_uri
+        token_holders(where: {quantity: {_gt: "0"}}) {
+          holder_id
+          quantity
+          holder {
+            name
+          }
+        }
         creator {
           address
           name
         }
         swaps(where: {status: {_eq: "0"}}, order_by: {price: asc}) {
+          amount_left
           price
           status
           id

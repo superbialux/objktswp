@@ -77,14 +77,16 @@ export const swap = async (pieces, ownerAddress, fee) => {
       )
     }
 
-    list.push(
-      {
-        kind: OpKind.TRANSACTION,
-        to: 'tz1MGXFh1CgiFL5p3dhLWiAabe9tkjjfrEdF',
-        amount: fee,
-      }
-    )
-    
+    if (fee !== 0) {
+      list.push(
+        {
+          kind: OpKind.TRANSACTION,
+          to: 'tz1MGXFh1CgiFL5p3dhLWiAabe9tkjjfrEdF',
+          amount: fee,
+        }
+      )
+    }
+
     let batch = await Tezos.wallet.batch(list)
     const batchOp = await batch.send()
     return await batchOp.confirmation()
