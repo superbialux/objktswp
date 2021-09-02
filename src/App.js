@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
-import { fetchPieces, getObjktInfo } from './data/api'
+import { fetchPieces } from './data/api'
 import { getIpfsUrl } from './utils/ipfs';
 import { toTezValue } from './utils/numbers';
 import { walletPreview } from './utils/string';
@@ -45,9 +45,6 @@ const App = () => {
     })()
   }, [account, type])
 
-  const fetchObjktPrice = async (id) => {
-    return await getObjktInfo(id)
-  }
 
   const batchSwap = useCallback(async () => {
     setLoading(`Swapping the OBJKTs`)
@@ -89,14 +86,15 @@ const App = () => {
           for (let i in swaps) {
             const objkt = swaps[i]
             if (objkt.status === 0 || !objkt.status) {
-              const objktInfo = await fetchObjktPrice(objkt.token.id)
-              const currentSwaps = objktInfo.swaps.filter(objkt => objkt.status === 0)
+              const objktInfo = objkt.token
+              const currentSwaps = objktInfo.swaps
               let lowestPricedObjkt = false
               if (currentSwaps.length) {
                 lowestPricedObjkt = currentSwaps.reduce(function (prev, curr) {
                   return prev.price < curr.price ? prev : curr;
                 });
               }
+
               result.push({
                 ...objkt,
                 meta: objktInfo,
