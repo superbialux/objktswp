@@ -98,54 +98,56 @@ const App = () => {
 
   useEffect(() => {
     (async () => {
-      setLoading('Fetching your collection')
       if (account) {
-        try {
-          const result = []
-          for (let i in swaps) {
-            const objkt = swaps[i]
+        if (swaps && swaps.length) {
+          setLoading('Fetching your collection')
+          try {
+            const result = []
+            for (let i in swaps) {
+              const objkt = swaps[i]
 
-            const objktInfo = objkt.token
-            const currentSwaps = objktInfo.swaps
-            let lowestPricedObjkt = false
-            if (currentSwaps.length) {
-              lowestPricedObjkt = currentSwaps.reduce(function (prev, curr) {
-                return prev.price < curr.price ? prev : curr;
-              });
-            }
+              const objktInfo = objkt.token
+              const currentSwaps = objktInfo.swaps
+              let lowestPricedObjkt = false
+              if (currentSwaps.length) {
+                lowestPricedObjkt = currentSwaps.reduce(function (prev, curr) {
+                  return prev.price < curr.price ? prev : curr;
+                });
+              }
 
-            let total = 0
-            total = objktInfo.supply
-            let ed =
-              objktInfo.token_holders.filter(
-                (e) => e.holder_id === 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn'
-              ).length > 0
-                ? objktInfo.token_holders.filter(
+              let total = 0
+              total = objktInfo.supply
+              let ed =
+                objktInfo.token_holders.filter(
                   (e) => e.holder_id === 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn'
-                )[0].quantity
-                : 'X'
-            result.push({
-              ...objkt,
-              meta: objktInfo,
-              creator: { link: `https://www.hicetnunc.xyz/tz/${objktInfo.creator.address}`, name: objktInfo.creator.name || walletPreview(objktInfo.creator.address) },
-              bidder: lowestPricedObjkt ? { link: `https://www.hicetnunc.xyz/tz/${lowestPricedObjkt.creator.address}`, name: lowestPricedObjkt.creator.name || walletPreview(lowestPricedObjkt.creator.address) } : false,
-              minPrice: toTezValue(lowestPricedObjkt.price),
-              price: toTezValue(objkt.price),
-              initialPrice: toTezValue(objkt.price || objkt.minPrice),
-              editions: `${ed}/${total}`
-            })
+                ).length > 0
+                  ? objktInfo.token_holders.filter(
+                    (e) => e.holder_id === 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn'
+                  )[0].quantity
+                  : 'X'
+              result.push({
+                ...objkt,
+                meta: objktInfo,
+                creator: { link: `https://www.hicetnunc.xyz/tz/${objktInfo.creator.address}`, name: objktInfo.creator.name || walletPreview(objktInfo.creator.address) },
+                bidder: lowestPricedObjkt ? { link: `https://www.hicetnunc.xyz/tz/${lowestPricedObjkt.creator.address}`, name: lowestPricedObjkt.creator.name || walletPreview(lowestPricedObjkt.creator.address) } : false,
+                minPrice: toTezValue(lowestPricedObjkt.price),
+                price: toTezValue(objkt.price),
+                initialPrice: toTezValue(objkt.price || objkt.minPrice),
+                editions: `${ed}/${total}`
+              })
 
+            }
+            setCollection(result)
+          } catch (err) {
+            console.log(err)
+            setCollection([])
           }
-          setCollection(result)
-        } catch (err) {
-          console.log(err)
-          setCollection([])
+          setLoading(false)
         }
       } else {
         setCollection([])
         setToSwap({})
       }
-      setLoading(false)
     })()
   }, [account, swaps])
 
@@ -259,7 +261,7 @@ const App = () => {
                   />
                   <span className="w-1/3 text-center text-base">tez</span>
                 </div>
-              </div> }
+              </div>}
               {
                 collection && collection.length ?
                   collection.map((piece, idx) => (
@@ -291,17 +293,17 @@ const App = () => {
                             </div> : <p className='text-base text-left'>-</p>}
                         </div>
                         <div>
-                          <button  tabIndex="-1" onClick={() => setListings({...listings, [piece.token.id]: !listings[piece.token.id]})} className="text-sm flex flex-row items-center underline text-gray-900">Show Listings <AiFillCaretDown className="ml-1" /></button>
+                          <button tabIndex="-1" onClick={() => setListings({ ...listings, [piece.token.id]: !listings[piece.token.id] })} className="text-sm flex flex-row items-center underline text-gray-900">Show Listings <AiFillCaretDown className="ml-1" /></button>
                           {listings[piece.token.id] ? <div className="text-xs mt-1">
                             {piece.meta.swaps.sort(sortByPrice).map((swap, index) => (
                               <div key={index} >
                                 <div className="items-center">
-                               {swap.amount_left} ed. <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-sm text-blue underline text-blue-500" href={`https://www.hicetnunc.xyz/tz/${swap.creator.address}`}> 
-                                 {swap.creator.name || walletPreview(swap.creator.address)}</a> {toTezValue(swap.price)} tez
+                                  {swap.amount_left} ed. <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-sm text-blue underline text-blue-500" href={`https://www.hicetnunc.xyz/tz/${swap.creator.address}`}>
+                                    {swap.creator.name || walletPreview(swap.creator.address)}</a> {toTezValue(swap.price)} tez
                                 </div>
                               </div>
                             ))}
-                          </div> : null }
+                          </div> : null}
                         </div>
                       </div>
                       <div className="w-1/6 flex flex-col justify-center">
@@ -355,7 +357,7 @@ const App = () => {
 
               <div className="flex-1 flex flex-row justify-end">
                 {account
-                  ? <button disabled={!getNewObjkts || (parseFloat(fee) === 0 && !isCool) } className="text-base bg-transparent text-white border-none underline" onClick={batchSwap}>Swap {getNewObjkts} OBJKT{getNewObjkts === 1 ? '' : 's'}</button>
+                  ? <button disabled={!getNewObjkts || (parseFloat(fee) === 0 && !isCool)} className="text-base bg-transparent text-white border-none underline" onClick={batchSwap}>Swap {getNewObjkts} OBJKT{getNewObjkts === 1 ? '' : 's'}</button>
                   : null
                 }
               </div>
