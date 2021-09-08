@@ -281,7 +281,10 @@ const App = () => {
                             <div className="bg-gray-300 w-1 h-1 mx-2" />
                             <p className="text-sm text-black">Editions: {piece.editions} </p>
                             <div className="bg-gray-300 w-1 h-1 mx-2" />
-                            <p className="text-sm text-black">#{piece.token.id}</p></div>
+                            <p className="text-sm text-black">#{piece.token.id}</p>
+                            <div className="bg-gray-300 w-1 h-1 mx-2" /> 
+                            <p className="text-sm text-black">{piece.token.royalties/10}%</p>
+                          </div>
                         </div>
                       </div>
                       <div className="w-1/6">
