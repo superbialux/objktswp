@@ -125,6 +125,17 @@ const App = () => {
                     (e) => e.holder_id === 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn'
                   )[0].quantity
                   : 'X'
+
+              let holder = objktInfo.token_holders.find(
+                (e) => e.holder_id === account
+              )
+              
+              const currentSwap = currentSwaps.find(s => s.creator.address === account && s.status === 0)
+              
+              if (type === 'mySecondaryMarketSales') {
+                holder = {quantity: currentSwap.amount_left }
+              }
+
               result.push({
                 ...objkt,
                 meta: objktInfo,
@@ -133,13 +144,13 @@ const App = () => {
                 minPrice: toTezValue(lowestPricedObjkt.price),
                 price: toTezValue(objkt.price),
                 initialPrice: toTezValue(objkt.price || objkt.minPrice),
-                editions: `${ed}/${total}`
+                editions: `${ed}/${total}`,
+                holding: holder ? holder.quantity : 1,
               })
 
             }
             setCollection(result)
           } catch (err) {
-            console.log(err)
             setCollection([])
           }
           setLoading(false)
@@ -155,19 +166,13 @@ const App = () => {
     let count = 0
     for (let i in toSwap) {
       const objkt = collection.find(o => o.token.id === toSwap[i].token.id)
-      if (objkt.price) {
-        if (toSwap[i].price !== String(objkt.price)) {
-          count++
-        } else {
-          delete toSwap[i];
-        }
+      const price = toSwap[i].price || toSwap[i].price === '0' ? toSwap[i].price : String(objkt.price)
+      if (price !== String(objkt.price)) {
+        count++
       } else {
-        if (toSwap[i].price) {
-          count++
-        } else {
-          delete toSwap[i];
-        }
+        delete toSwap[i];
       }
+
     }
     return count
   }, [collection, toSwap])
@@ -180,14 +185,12 @@ const App = () => {
   }, [error])
 
   const getNewValue = useCallback((piece) => {
-    if (toSwap[piece.token.id]?.price === undefined) {
-      if (piece.price) {
-        return piece.price
-      }
-      return ''
+    if (toSwap[piece.token.id]) {
+      return toSwap[piece.token.id]
     }
-    return toSwap[piece.token.id]?.price
+    return { ...piece, price: piece.price ? piece.price : '' }
   }, [toSwap])
+
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -269,11 +272,12 @@ const App = () => {
                       <div className="flex flex-row items-center w-3/6">
                         <img className="h-6 w-6 mr-3" src={getIpfsUrl(piece.token.display_uri)} alt={piece.token.id} />
                         <div className="flex flex-col items-start">
-
-                          <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base underline text-blue-500" href={`https://www.hicetnunc.xyz/objkt/${piece.token.id}`}>
-                            {piece.token.title || '#' + piece.token.id}
-                          </a>
-
+                          <div className="flex flex-row items-center">
+                            <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base underline text-blue-500" href={`https://www.hicetnunc.xyz/objkt/${piece.token.id}`}>
+                              {piece.token.title || '#' + piece.token.id}
+                            </a>
+                            <span className="pl-2 text-sm text-yellow-600">x {piece.holding} ed.</span>
+                          </div>
                           <div className="flex flex-row items-center">
                             <p className="text-sm text-black">
                               by <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base text-blue underline text-blue-500" href={piece.creator.link}>{piece.creator.name}</a>
@@ -282,8 +286,8 @@ const App = () => {
                             <p className="text-sm text-black">Editions: {piece.editions} </p>
                             <div className="bg-gray-300 w-1 h-1 mx-2" />
                             <p className="text-sm text-black">#{piece.token.id}</p>
-                            <div className="bg-gray-300 w-1 h-1 mx-2" /> 
-                            <p className="text-sm text-black">{piece.token.royalties/10}%</p>
+                            <div className="bg-gray-300 w-1 h-1 mx-2" />
+                            <p className="text-sm text-black">{piece.token.royalties / 10}%</p>
                           </div>
                         </div>
                       </div>
@@ -316,24 +320,48 @@ const App = () => {
                             : <p className='text-base text-left'>-</p>
                         }
                       </div>
-                      <div className="w-1/6 flex flex-row items-center justify-center">
-                        <input
-                          onWheel={(e) => e.target.blur()}
-                          className="border p-1 border-gray-300 w-2/3"
-                          value={getNewValue(piece)}
-                          placeholder="price"
-                          type="number"
-                          onChange={(e) => {
-                            setToSwap({
-                              ...toSwap,
-                              [piece.token.id]: {
-                                ...piece,
-                                price: e.target.value
-                              }
-                            })
-                          }}
-                        />
-                        <span className="w-1/3 text-center text-base">tez</span>
+                      <div className="w-1/6 flex flex-row">
+                        <div className="w-2/3 flex flex-row items-center justify-center">              
+                          <input
+                            onWheel={(e) => e.target.blur()}
+                            className="border p-1 border-gray-300 w-2/3"
+                            value={getNewValue(piece).price}
+                            placeholder="price"
+                            type="number"
+                            onChange={(e) => {
+                              const lastPiece = toSwap[piece.token.id] ? toSwap[piece.token.id] : piece
+                              setToSwap((val) => ({
+                                ...val,
+                                [piece.token.id]: {
+                                  ...lastPiece,
+                                  price: e.target.value
+                                }
+                              }))
+                            }}
+                          />
+                          <span className="w-1/3 text-center text-base">tez</span>
+                        </div>
+
+                        {piece.holding > 1 ? <div className="w-1/3 flex flex-row items-center justify-center">
+                          <input
+                            onWheel={(e) => e.target.blur()}
+                            className="border p-1 border-gray-300 w-2/3"
+                            value={getNewValue(piece).holding}
+                            placeholder="ed"
+                            type="number"
+                            onChange={(e) => {
+                              const lastPiece = toSwap[piece.token.id] ? toSwap[piece.token.id] : piece
+                              setToSwap((val) => ({
+                                ...val,
+                                [piece.token.id]: {
+                                  ...lastPiece,
+                                  holding: e.target.value
+                                }
+                              }))
+                            }}
+                          />
+                          <span className="w-1/3 text-center text-base">ed.</span>
+                        </div> : null}
                       </div>
                     </div>
                   )) : null

@@ -42,6 +42,7 @@ export const disconnect = async () => {
 
 
 export const swap = async (pieces, ownerAddress, fee) => {
+  console.log(pieces)
   try {
     const v2Contract = 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn'
     const objktsContract = 'KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton'
@@ -53,6 +54,7 @@ export const swap = async (pieces, ownerAddress, fee) => {
     for (let i in pieces) {
       const objkt = pieces[i]
       const price = objkt.price ? objkt.price : objkt.initialPrice
+      const amount = objkt.holding ? objkt.holding : 1
 
       const currentSwap = objkt.meta.swaps?.find(s => s.creator.address === ownerAddress && s.status === 0)
 
@@ -72,7 +74,7 @@ export const swap = async (pieces, ownerAddress, fee) => {
       list.push(
         {
           kind: OpKind.TRANSACTION,
-          ...marketplace.methods.swap(objkt.meta.creator.address, parseFloat(1), parseFloat(objkt.meta.id), parseFloat(objkt.meta.royalties), parseFloat(price * 1000000)).toTransferParams({ amount: 0, mutez: true, storageLimit: 220 })
+          ...marketplace.methods.swap(objkt.meta.creator.address, parseFloat(amount), parseFloat(objkt.meta.id), parseFloat(objkt.meta.royalties), parseFloat(price * 1000000)).toTransferParams({ amount: 0, mutez: true, storageLimit: 220 })
         }
       )
     }
