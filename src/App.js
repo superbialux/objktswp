@@ -128,8 +128,8 @@ const App = () => {
               result.push({
                 ...objkt,
                 meta: objktInfo,
-                creator: { link: `https://www.hicetnunc.xyz/tz/${objktInfo.creator.address}`, name: objktInfo.creator.name || walletPreview(objktInfo.creator.address) },
-                bidder: lowestPricedObjkt ? { link: `https://www.hicetnunc.xyz/tz/${lowestPricedObjkt.creator.address}`, name: lowestPricedObjkt.creator.name || walletPreview(lowestPricedObjkt.creator.address) } : false,
+                creator: { link: `https://www.hicetnunc.art/tz/${objktInfo.creator.address}`, name: objktInfo.creator.name || walletPreview(objktInfo.creator.address) },
+                bidder: lowestPricedObjkt ? { link: `https://www.hicetnunc.art/tz/${lowestPricedObjkt.creator.address}`, name: lowestPricedObjkt.creator.name || walletPreview(lowestPricedObjkt.creator.address) } : false,
                 minPrice: toTezValue(lowestPricedObjkt.price),
                 price: toTezValue(objkt.price),
                 initialPrice: toTezValue(objkt.price || objkt.minPrice),
@@ -197,7 +197,7 @@ const App = () => {
           <p className="text-base text-left font-medium">{loading}</p>
         </section>
         : <>
-          <section id="controls" className="w-full flex flex-col items-center pt-6 pb-4">
+          <section id="controls" className="w-full flex flex-col items-center pt-6 pb-4 px-4">
             <div className="container">
               <div className="flex flex-row py-2 items-center">
                 {
@@ -217,7 +217,7 @@ const App = () => {
               </div>
             </div>
           </section>
-          <section id="main" className="w-full flex flex-col items-center pb-16">
+          <section id="main" className="w-full flex flex-col items-center pb-16 px-4">
             <div className="container">
               <div className="flex flex-row justify-between py-2 items-center border-b-4 border-gray-300">
                 <div className="flex flex-row items-center w-3/6">
@@ -241,7 +241,7 @@ const App = () => {
                   <div className="flex flex-col items-start">
                     <p className="text-base text-black">Service Fee (min 0.01)</p>
                     <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base underline text-blue-500" href='https://twitter.com/superbialux'>Twitter: @superbialux</a>
-                    <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base underline text-blue-500" href='https://www.hicetnunc.xyz/superbia'>HEN: superbia</a>
+                    <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base underline text-blue-500" href='https://www.hicetnunc.art/superbia'>HEN: superbia</a>
                   </div>
                 </div>
                 <div className="w-1/6">
@@ -266,11 +266,11 @@ const App = () => {
                 collection && collection.length ?
                   collection.map((piece, idx) => (
                     <div key={idx} className={`flex flex-row justify-between py-2 border-b border-gray-200 ${toSwap[piece.token.id] ? 'bg-gray-100' : 'bg-white'}`}>
-                      <div className="flex flex-row items-center w-3/6">
+                      <div className="flex flex-row items-center w-3/6 overflow-hidden">
                         <img className="h-6 w-6 mr-3" src={getIpfsUrl(piece.token.display_uri)} alt={piece.token.id} />
                         <div className="flex flex-col items-start">
 
-                          <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base underline text-blue-500" href={`https://www.hicetnunc.xyz/objkt/${piece.token.id}`}>
+                          <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-base underline text-blue-500" href={`https://www.hicetnunc.art/objkt/${piece.token.id}`}>
                             {piece.token.title || '#' + piece.token.id}
                           </a>
 
@@ -287,7 +287,7 @@ const App = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="w-1/6">
+                      <div className="w-1/6 overflow-hidden">
                         <div>
                           {
                             piece.minPrice || piece.price === 0 ? <div className="flex flex-row items-center">
@@ -301,7 +301,7 @@ const App = () => {
                             {piece.meta.swaps.sort(sortByPrice).map((swap, index) => (
                               <div key={index} >
                                 <div className="items-center">
-                                  {swap.amount_left} ed. <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-sm text-blue underline text-blue-500" href={`https://www.hicetnunc.xyz/tz/${swap.creator.address}`}>
+                                  {swap.amount_left} ed. <a target="_blank" rel="noreferrer" tabIndex="-1" className="text-sm text-blue underline text-blue-500" href={`https://www.hicetnunc.art/tz/${swap.creator.address}`}>
                                     {swap.creator.name || walletPreview(swap.creator.address)}</a> {toTezValue(swap.price)} tez
                                 </div>
                               </div>
@@ -309,7 +309,7 @@ const App = () => {
                           </div> : null}
                         </div>
                       </div>
-                      <div className="w-1/6 flex flex-col justify-center">
+                      <div className="w-1/6 flex flex-col justify-center overflow-hidden">
                         {
                           piece.price || piece.price === 0
                             ? <p className={`text-base text-left ${parseFloat(piece.price) > parseFloat(piece.minPrice) ? 'text-red-500' : null}`}>{piece.price} tez</p>
@@ -343,7 +343,7 @@ const App = () => {
               </div>}
             </div>
           </section>
-          <footer className="fixed bottom-0 bg-gray-900 w-full flex flex-row justify-center">
+          <footer className="fixed bottom-0 bg-gray-900 w-full flex flex-row justify-center px-4">
             <div className="container flex flex-row justify-between py-3">
               <div className="flex-1 flex flex-row justify-start">
                 {account
