@@ -40,6 +40,43 @@ export const disconnect = async () => {
   }
 }
 
+export const cancelAll = async (pieces, ownerAddress, fee) => {
+  try {
+    const v2Contract = 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn'
+    let marketplace = await Tezos.wallet.at(v2Contract)
+
+    let list = []
+    for (let i in pieces) {
+      const objkt = pieces[i]
+      const currentSwap = objkt.token.swaps?.find(s => s.creator.address === ownerAddress && s.status === 0)
+
+      if (currentSwap) {
+        list.push({
+          kind: OpKind.TRANSACTION,
+          ...marketplace.methods.cancel_swap(parseFloat(currentSwap.id)).toTransferParams({ amount: 0, mutez: true, storageLimit: 250 })
+        })
+      }
+    }
+
+    if (fee !== 0) {
+      list.push(
+        {
+          kind: OpKind.TRANSACTION,
+          to: 'tz1MGXFh1CgiFL5p3dhLWiAabe9tkjjfrEdF',
+          amount: fee,
+        }
+      )
+    }
+
+    let batch = await Tezos.wallet.batch(list)
+    const batchOp = await batch.send()
+    return await batchOp.confirmation()
+  } catch (err) {
+    console.log(err)
+    throw err
+  }
+}
+
 
 export const swap = async (pieces, ownerAddress, fee) => {
   try {

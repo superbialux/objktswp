@@ -3,7 +3,7 @@ import { fetchPieces } from './data/api'
 import { getIpfsUrl } from './utils/ipfs';
 import { toTezValue } from './utils/numbers';
 import { walletPreview } from './utils/string';
-import { swap, connect, disconnect, getAccount } from './data/hen';
+import { swap, connect, disconnect, getAccount, cancelAll } from './data/hen';
 import ReactLoading from "react-loading";
 import { AiFillCaretDown } from "react-icons/ai";
 
@@ -64,6 +64,18 @@ const App = () => {
     })()
   }, [account, type])
 
+  const batchCancel = useCallback(async () => {
+    setLoading('Canceling all swaps')
+    try {
+      await cancelAll(swaps, account, fee)
+      const pieces = await fetchPieces(account, type)
+      setSwaps(pieces)
+      setToSwap({})
+    } catch {
+      setError('Operation Failed')
+    }
+    setLoading(false)
+  }, [account, swaps, fee, type])
 
   const batchSwap = useCallback(async () => {
     setLoading(`Swapping the OBJKTs`)
@@ -282,8 +294,8 @@ const App = () => {
                             <p className="text-sm text-black">Editions: {piece.editions} </p>
                             <div className="bg-gray-300 w-1 h-1 mx-2" />
                             <p className="text-sm text-black">#{piece.token.id}</p>
-                            <div className="bg-gray-300 w-1 h-1 mx-2" /> 
-                            <p className="text-sm text-black">{piece.token.royalties/10}%</p>
+                            <div className="bg-gray-300 w-1 h-1 mx-2" />
+                            <p className="text-sm text-black">{piece.token.royalties / 10}%</p>
                           </div>
                         </div>
                       </div>
@@ -359,6 +371,11 @@ const App = () => {
               </div> : null}
 
               <div className="flex-1 flex flex-row justify-end">
+                {account && type === 'mySecondaryMarketSales'
+                  ? <button disabled={(parseFloat(fee) === 0 && !isCool)} className="text-base bg-transparent text-red-400 border-none underline mr-4" onClick={batchCancel}>Cancel All Swaps</button>
+                  : null
+                }
+
                 {account
                   ? <button disabled={!getNewObjkts || (parseFloat(fee) === 0 && !isCool)} className="text-base bg-transparent text-white border-none underline" onClick={batchSwap}>Swap {getNewObjkts} OBJKT{getNewObjkts === 1 ? '' : 's'}</button>
                   : null
